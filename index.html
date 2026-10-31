@@ -1,0 +1,515 @@
+<!DOCTYPE html>
+<html lang="en-SG">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="color-scheme" content="light dark">
+<title>My Car Financing</title>
+<style>
+  :root {
+    --bg: #f5f5f7; --card: #ffffff; --ink: #1d1d1f; --ink-2: #424245; --muted: #6e6e73;
+    --line: #e5e5ea; --field: #ffffff; --field-line: #d2d2d7; --soft: #f5f5f7;
+    --accent: #0071e3; --accent-soft: rgba(0,113,227,.12);
+    --ok: #248a3d; --amber: #b25000; --bad: #d70015;
+    --bad-soft: #fff1f0; --bad-line: #ffccc7;
+    --shadow: 0 1px 2px rgba(0,0,0,.04), 0 8px 24px rgba(0,0,0,.06);
+    --r-lg: 16px; --r-md: 12px;
+    --s1: 8px; --s2: 16px; --s3: 24px; --s4: 32px;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #000000; --card: #1c1c1e; --ink: #f5f5f7; --ink-2: #d1d1d6; --muted: #98989d;
+      --line: #2c2c2e; --field: #2c2c2e; --field-line: #3a3a3c; --soft: #2c2c2e;
+      --accent: #0a84ff; --accent-soft: rgba(10,132,255,.2);
+      --ok: #30d158; --amber: #ff9f0a; --bad: #ff453a;
+      --bad-soft: rgba(255,69,58,.12); --bad-line: rgba(255,69,58,.35);
+      --shadow: none;
+    }
+  }
+  * { box-sizing: border-box; }
+  html { -webkit-text-size-adjust: 100%; }
+  body {
+    margin: 0; background: var(--bg); color: var(--ink);
+    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    font-size: 16px; line-height: 1.5; -webkit-font-smoothing: antialiased;
+  }
+  .wrap { max-width: 1160px; margin: 0 auto; padding: var(--s3) var(--s2) var(--s2); }
+  header.top { display: flex; justify-content: space-between; align-items: flex-end; gap: var(--s2); margin-bottom: var(--s3); }
+  header.top h1 { margin: 0; font-size: 1.75rem; line-height: 1.2; letter-spacing: -.02em; font-weight: 700; }
+  header.top p { margin: 4px 0 0; color: var(--muted); font-size: .875rem; }
+  .layout { display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--s2); }
+  @media (min-width: 960px) {
+    .layout { grid-template-columns: 380px minmax(0, 1fr); gap: var(--s3); align-items: start; }
+    .panel { position: sticky; top: var(--s2); max-height: calc(100vh - 32px); overflow-y: auto; }
+    header.top h1 { font-size: 2.25rem; }
+  }
+  .card { background: var(--card); border-radius: var(--r-lg); box-shadow: var(--shadow); padding: var(--s3) var(--s2); margin-bottom: var(--s2); min-width: 0; }
+  @media (min-width: 480px) { .card { padding: var(--s3); } }
+  .card h2 { margin: 0 0 var(--s2); font-size: 1.125rem; letter-spacing: -.01em; font-weight: 650; }
+  .group { border-top: 1px solid var(--line); padding-top: var(--s2); margin-top: var(--s2); }
+  .group:first-of-type { border-top: 0; padding-top: 0; margin-top: 0; }
+  .group h3 { margin: 0 0 12px; font-size: .75rem; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); font-weight: 600; }
+
+  .field { margin-bottom: 12px; min-width: 0; }
+  .label { display: block; font-weight: 550; font-size: .8125rem; color: var(--ink-2); margin-bottom: 6px; }
+  .label .unit { color: var(--muted); font-weight: 400; }
+  .hint { color: var(--muted); font-size: .75rem; margin-top: 6px; }
+  .grid2 { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 12px; }
+
+  .input { display: flex; align-items: center; min-width: 0; height: 44px; background: var(--field); border: 1px solid var(--field-line); border-radius: var(--r-md); transition: border-color .15s, box-shadow .15s; }
+  .input:focus-within { border-color: var(--accent); box-shadow: 0 0 0 4px var(--accent-soft); }
+  .input .affix { color: var(--muted); font-size: .875rem; padding: 0 0 0 12px; flex: 0 0 auto; user-select: none; }
+  .input .affix.suf { padding: 0 12px 0 0; }
+  .input input { flex: 1; min-width: 0; width: 100%; height: 100%; border: 0; background: transparent; color: var(--ink); font: inherit; font-size: 16px; padding: 0 12px 0 6px; outline: none; font-variant-numeric: tabular-nums; }
+  .input input:first-child { padding-left: 12px; }
+  .input.invalid { border-color: var(--bad); background: var(--bad-soft); }
+  input[type=number] { -moz-appearance: textfield; }
+  input::-webkit-outer-spin-button, input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+
+  .derived { display: flex; justify-content: space-between; align-items: baseline; gap: var(--s1); background: var(--soft); border-radius: var(--r-md); padding: 10px 12px; margin-bottom: 12px; font-size: .875rem; }
+  .derived span { color: var(--muted); }
+  .derived b { font-variant-numeric: tabular-nums; }
+  .err { color: var(--bad); font-size: .75rem; margin-top: 6px; display: none; }
+  .err.show { display: block; }
+  .alert { border-radius: var(--r-md); padding: 10px 12px; font-size: .8125rem; margin: 0 0 12px; display: none; background: var(--bad-soft); color: var(--bad); border: 1px solid var(--bad-line); }
+  .alert.show { display: block; }
+
+  .btn { font: inherit; font-size: .8125rem; border: 0; border-radius: 999px; padding: 0 14px; height: 32px; cursor: pointer; font-weight: 600; background: var(--card); color: var(--ink-2); box-shadow: inset 0 0 0 1px var(--field-line); flex: 0 0 auto; }
+  .btn:focus-visible, summary:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+  /* dashboard */
+  .hero { background: var(--accent); color: #fff; border-radius: var(--r-lg); padding: var(--s3); margin-bottom: var(--s2); }
+  .hero .k { font-size: .75rem; text-transform: uppercase; letter-spacing: .06em; font-weight: 600; color: rgba(255,255,255,.85); }
+  .hero .v { font-size: 2.75rem; font-weight: 700; letter-spacing: -.03em; line-height: 1.1; font-variant-numeric: tabular-nums; overflow-wrap: anywhere; margin-top: 4px; }
+  .hero .sub { color: rgba(255,255,255,.85); font-size: .8125rem; margin-top: var(--s1); }
+  .kpis { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--s1); margin-bottom: var(--s2); }
+  @media (min-width: 640px) { .kpis { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
+  .tile { background: var(--card); box-shadow: var(--shadow); border-radius: var(--r-md); padding: 12px var(--s2); min-width: 0; }
+  .tile .k { font-size: .75rem; color: var(--muted); }
+  .tile .v { font-size: 1.0625rem; font-weight: 650; font-variant-numeric: tabular-nums; overflow-wrap: anywhere; }
+  .tile .sub { font-size: .6875rem; color: var(--muted); margin-top: 2px; }
+  .tile.key .v { color: var(--accent); }
+  .dash2 { display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--s2); }
+  @media (min-width: 1100px) { .dash2 { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); align-items: start; } .dash2 .card { margin-bottom: 0; } }
+  .soft-tiles { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: var(--s1); }
+  .soft-tiles .tile { background: var(--soft); box-shadow: none; }
+  .bar { height: 8px; background: var(--soft); border-radius: 999px; overflow: hidden; margin: var(--s2) 0 var(--s1); }
+  .bar > div { height: 100%; width: 0; border-radius: 999px; transition: width .25s, background .25s; }
+  .verdict { font-weight: 700; }
+  .chart-wrap { display: flex; gap: var(--s3); align-items: center; flex-wrap: wrap; }
+  .chart-wrap svg { width: 160px; height: 160px; flex: 0 0 auto; margin: 0 auto; color: var(--ink); }
+  .legend { list-style: none; padding: 0; margin: 0; flex: 1 1 200px; min-width: 0; font-size: .8125rem; }
+  .legend li { display: flex; align-items: center; gap: var(--s1); padding: 4px 0; min-width: 0; }
+  .legend i { width: 10px; height: 10px; border-radius: 3px; flex: 0 0 auto; }
+  .legend span { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--ink-2); }
+  .legend b { margin-left: auto; font-weight: 600; white-space: nowrap; font-variant-numeric: tabular-nums; padding-left: var(--s1); }
+
+  footer { color: var(--muted); font-size: .8125rem; max-width: 1160px; margin: 0 auto; padding: 0 var(--s2) var(--s4); }
+  details.formulas { background: var(--card); border-radius: var(--r-lg); box-shadow: var(--shadow); padding: var(--s2) var(--s3); color: var(--ink); margin-bottom: var(--s2); }
+  details.formulas > summary { cursor: pointer; list-style: none; font-weight: 600; color: var(--accent); display: flex; justify-content: space-between; }
+  details.formulas > summary::-webkit-details-marker { display: none; }
+  details.formulas > summary::after { content: "+"; font-weight: 400; font-size: 1.125rem; line-height: 1; }
+  details.formulas[open] > summary::after { content: "−"; }
+  footer code { background: var(--soft); padding: 1px 6px; border-radius: 6px; font-size: .78rem; overflow-wrap: anywhere; }
+  footer ul { padding-left: 18px; margin: var(--s2) 0 0; }
+  footer li { margin: var(--s1) 0; }
+  .disclaimer { text-align: center; }
+
+  /* mobile: floating total while the hero is off-screen */
+  .float { position: fixed; left: 50%; bottom: max(12px, env(safe-area-inset-bottom)); transform: translate(-50%, 150%); background: var(--accent); color: #fff; border-radius: 999px; padding: 10px 18px; font-size: .875rem; font-weight: 600; box-shadow: 0 8px 24px rgba(0,0,0,.2); transition: transform .2s; white-space: nowrap; border: 0; font-family: inherit; cursor: pointer; }
+  .float.show { transform: translate(-50%, 0); }
+  @media (min-width: 960px) { .float { display: none; } }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <div>
+      <h1>My Car Financing</h1>
+      <p>Singapore · live dashboard of your loan, running costs &amp; affordability</p>
+    </div>
+    <button type="button" class="btn" id="reset">Reset</button>
+  </header>
+
+  <div class="layout">
+    <!-- ===== INPUT PANEL ===== -->
+    <section class="card panel" aria-labelledby="yc">
+      <h2 id="yc">Your car</h2>
+
+      <div class="group">
+        <h3>Car</h3>
+        <div class="grid2">
+          <div class="field">
+            <label class="label" for="price">Car price <span class="unit">(incl. COE)</span></label>
+            <div class="input"><span class="affix">S$</span><input id="price" type="number" inputmode="decimal" min="0" step="any"></div>
+            <div class="err" id="price-err"></div>
+          </div>
+          <div class="field">
+            <label class="label" for="omv">OMV</label>
+            <div class="input"><span class="affix">S$</span><input id="omv" type="number" inputmode="decimal" min="0" step="any" placeholder="Optional"></div>
+            <div class="err" id="omv-err"></div>
+          </div>
+        </div>
+        <div class="hint" id="cap-hint" style="margin:-4px 0 0"></div>
+      </div>
+
+      <div class="group">
+        <h3>Loan</h3>
+        <div class="field">
+          <span class="label">Downpayment</span>
+          <div class="grid2">
+            <div class="input"><span class="affix">S$</span><input id="downAmt" type="number" inputmode="decimal" min="0" step="any" aria-label="Downpayment in S$"></div>
+            <div class="input"><input id="downPct" type="number" inputmode="decimal" min="0" max="100" step="any" aria-label="Downpayment in percent"><span class="affix suf">%</span></div>
+          </div>
+          <div class="err" id="down-err"></div>
+        </div>
+        <div class="alert" id="down-warn" role="alert"></div>
+        <div class="derived"><span>Loan amount</span><b id="d-loan">–</b></div>
+
+        <div class="field">
+          <span class="label">Loan tenure <span class="unit">(max 7 years)</span></span>
+          <div class="grid2">
+            <div class="input"><input id="years" type="number" inputmode="numeric" min="0" max="7" step="1" aria-label="Tenure years"><span class="affix suf">years</span></div>
+            <div class="input"><input id="months" type="number" inputmode="numeric" min="0" max="11" step="1" aria-label="Tenure extra months"><span class="affix suf">months</span></div>
+          </div>
+          <div class="err" id="tenure-err"></div>
+        </div>
+
+        <div class="field">
+          <label class="label" for="rate">Interest rate <span class="unit">(% p.a., flat)</span></label>
+          <div class="input"><input id="rate" type="number" inputmode="decimal" min="0" step="0.01"><span class="affix suf">%</span></div>
+          <div class="hint">SG car loans are quoted as <b>flat</b> rates — interest on the full loan for the whole tenure, so the effective rate is roughly double.</div>
+          <div class="err" id="rate-err"></div>
+        </div>
+      </div>
+
+      <div class="group">
+        <h3>Running costs</h3>
+        <div class="grid2" id="rc"></div>
+      </div>
+
+      <div class="group">
+        <h3>You</h3>
+        <div class="field" style="margin-bottom:0">
+          <label class="label" for="salary">Monthly salary <span class="unit">(optional)</span></label>
+          <div class="input"><span class="affix">S$</span><input id="salary" type="number" inputmode="decimal" min="0" step="any" placeholder="Optional"></div>
+          <div class="err" id="salary-err"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===== DASHBOARD ===== -->
+    <main aria-label="Financing dashboard">
+      <div class="hero" id="hero">
+        <div class="k">Total monthly car cost</div>
+        <div class="v" id="r-total">–</div>
+        <div class="sub" id="r-total-sub">Instalment + running costs</div>
+      </div>
+
+      <div class="kpis">
+        <div class="tile key"><div class="k">Monthly instalment</div><div class="v" id="k-instal">–</div></div>
+        <div class="tile key"><div class="k">Running costs / mth</div><div class="v" id="k-running">–</div></div>
+        <div class="tile"><div class="k">Loan amount</div><div class="v" id="k-loan">–</div></div>
+        <div class="tile"><div class="k">Downpayment</div><div class="v" id="k-down">–</div><div class="sub" id="k-down-sub"></div></div>
+        <div class="tile"><div class="k">Total interest</div><div class="v" id="k-interest">–</div></div>
+        <div class="tile"><div class="k">Total repayable</div><div class="v" id="k-repay">–</div></div>
+        <div class="tile"><div class="k">EIR (approx.)</div><div class="v" id="k-eir">–</div><div class="sub">≈ flat × 2n/(n+1)</div></div>
+        <div class="tile"><div class="k">Total cost of ownership</div><div class="v" id="k-tco">–</div><div class="sub" id="k-tco-sub"></div></div>
+      </div>
+
+      <div class="dash2">
+        <section class="card">
+          <h2>Monthly breakdown</h2>
+          <div class="chart-wrap">
+            <svg viewBox="0 0 42 42" role="img" aria-label="Monthly cost breakdown donut chart" id="donut"></svg>
+            <ul class="legend" id="legend"></ul>
+          </div>
+        </section>
+
+        <section class="card">
+          <h2>Affordability</h2>
+          <div class="soft-tiles">
+            <div class="tile"><div class="k">Minimum salary <span class="sub">(cost ≤ 70%)</span></div><div class="v" id="a-min">–</div><div class="sub" id="a-min-y">–</div></div>
+            <div class="tile"><div class="k">Recommended salary <span class="sub">(cost ≤ 30%)</span></div><div class="v" id="a-rec">–</div><div class="sub" id="a-rec-y">–</div></div>
+          </div>
+          <div id="aff" hidden>
+            <div class="bar" role="progressbar" aria-valuemin="0" aria-valuemax="100" id="aff-bar"><div id="aff-fill"></div></div>
+            <div style="font-size:.9375rem"><span class="verdict" id="aff-verdict"></span> · <span id="aff-text"></span></div>
+          </div>
+          <div class="hint" id="aff-empty">Enter your monthly salary to see how comfortable this is.</div>
+        </section>
+      </div>
+    </main>
+  </div>
+</div>
+
+<button type="button" class="float" id="float" aria-hidden="true" tabindex="-1">Total <span id="float-v">–</span> / mth</button>
+
+<footer>
+  <details class="formulas">
+    <summary>Formulas used</summary>
+    <ul>
+      <li><b>MAS loan cap:</b> OMV ≤ S$20,000 → max loan 70% (min 30% down); OMV &gt; S$20,000 or blank → max loan 60% (min 40% down).</li>
+      <li><b>Downpayment:</b> <code>S$ = Price × % ÷ 100</code>, <code>% = S$ ÷ Price × 100</code>; changing price keeps the %.</li>
+      <li><b>Loan</b> = <code>Car Price − Downpayment</code></li>
+      <li><b>Tenure:</b> <code>n = Years × 12 + Months</code> (1–84); years in formula = <code>n ÷ 12</code></li>
+      <li><b>Total Interest</b> = <code>Loan × (Rate ÷ 100) × (n ÷ 12)</code></li>
+      <li><b>Monthly Instalment</b> = <code>(Loan + Total Interest) ÷ n</code></li>
+      <li><b>EIR (approx.)</b> ≈ <code>Flat Rate × 2 × n ÷ (n + 1)</code></li>
+      <li><b>Running costs / month</b> = <code>yearly items ÷ 12 + monthly items</code></li>
+      <li><b>Total Monthly Car Cost</b> = <code>Instalment + Running Costs</code></li>
+      <li><b>Total Cost of Ownership</b> = <code>Downpayment + Total Repayable + Running Costs × n</code></li>
+      <li><b>Minimum salary</b> = <code>Monthly Cost ÷ 0.70</code>; <b>Recommended</b> = <code>Monthly Cost ÷ 0.30</code>; annual = ×12</li>
+      <li><b>Bar:</b> ≤ 30% green (Comfortable) · 30–70% amber (Stretching) · &gt; 70% red (Not affordable)</li>
+    </ul>
+  </details>
+  <p class="disclaimer">Estimates only. Rates, MAS rules and costs change; check with your bank/dealer.</p>
+</footer>
+
+<script>
+/*CALC-START*/
+var SG = (function () {
+  var fmtr = new Intl.NumberFormat('en-SG', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  function money(n) {
+    if (!isFinite(n)) return '–';
+    return (n < 0 ? '-' : '') + 'S$' + fmtr.format(Math.abs(n));
+  }
+  function round2(n) { return Math.round((n + Number.EPSILON) * 100) / 100; }
+  function hasOmv(omv) { return omv !== null && omv !== undefined && omv !== '' && isFinite(omv); }
+
+  // MAS cap: min downpayment ratio. Blank OMV -> stricter 40% rule.
+  function minDownRatio(omv) { return hasOmv(omv) && Number(omv) <= 20000 ? 0.30 : 0.40; }
+
+  // Tenure: years*12 + months, valid 1..84
+  function tenure(years, months) {
+    var y = Number(years) || 0, m = Number(months) || 0;
+    var total = Math.round(y * 12 + m), error = '';
+    if (y < 0 || m < 0) error = 'Tenure cannot be negative.';
+    else if (m > 11) error = 'Months must be 0–11.';
+    else if (total > 84) error = 'Maximum tenure is 7 years (84 months) under MAS rules.';
+    else if (total < 1) error = 'Minimum tenure is 1 month.';
+    return { months: Math.min(84, Math.max(1, total)), requested: total, error: error };
+  }
+
+  function downFromPct(price, pct) { return price * pct / 100; }
+  function pctFromDown(price, down) { return price > 0 ? down / price * 100 : 0; }
+
+  // o: { price, omv, down, months, rate }
+  function loan(o) {
+    var price = o.price, down = o.down, n = o.months, rate = o.rate;
+    var ratio = minDownRatio(o.omv);
+    var amount = Math.max(0, price - down);
+    var years = n / 12;
+    var interest = amount * (rate / 100) * years;
+    var repay = amount + interest;
+    var minDown = price * ratio;
+    return {
+      loan: amount, months: n, interest: interest, repayable: repay,
+      instalment: n > 0 ? repay / n : 0,
+      eir: rate * 2 * n / (n + 1),
+      minDown: minDown, minDownPct: ratio * 100, maxLoan: price - minDown,
+      belowMin: down + 1e-9 < minDown, omvAssumed: !hasOmv(o.omv)
+    };
+  }
+
+  // items: [{value, per:'year'|'month'}] -> monthly total
+  function runningMonthly(items) {
+    return items.reduce(function (s, r) { var v = Math.max(0, Number(r.value) || 0); return s + (r.per === 'year' ? v / 12 : v); }, 0);
+  }
+
+  function totals(o) {
+    var total = o.instalment + o.running;
+    return { totalMonthly: total, tco: o.down + o.repayable + o.running * o.months,
+             minSalary: total / 0.70, recSalary: total / 0.30 };
+  }
+
+  function affordability(totalMonthly, salary) {
+    if (!(salary > 0)) return null;
+    var pct = totalMonthly / salary * 100;
+    var band = pct <= 30 ? 'ok' : (pct <= 70 ? 'warn' : 'bad');
+    return { pct: pct, band: band, verdict: band === 'ok' ? 'Comfortable' : band === 'warn' ? 'Stretching' : 'Not affordable' };
+  }
+
+  return { money: money, round2: round2, minDownRatio: minDownRatio, tenure: tenure,
+           downFromPct: downFromPct, pctFromDown: pctFromDown, loan: loan,
+           runningMonthly: runningMonthly, totals: totals, affordability: affordability };
+})();
+if (typeof module !== 'undefined' && module.exports) module.exports = SG;
+/*CALC-END*/
+
+(function () {
+  if (typeof document === 'undefined') return;
+  var $ = function (id) { return document.getElementById(id); };
+
+  var RUNNING = [
+    { id: 'insurance', label: 'Insurance', per: 'year', def: 1800, color: '#ff9f0a' },
+    { id: 'roadtax', label: 'Road tax', per: 'year', def: 1000, color: '#30b0c7' },
+    { id: 'service', label: 'Servicing & maintenance', per: 'year', def: 800, color: '#af52de' },
+    { id: 'parking', label: 'Parking', per: 'month', def: 110, color: '#ff2d55' },
+    { id: 'petrol', label: 'Petrol / charging', per: 'month', def: 300, color: '#34c759' },
+    { id: 'erp', label: 'ERP & tolls', per: 'month', def: 0, color: '#a2845e' }
+  ];
+  var DEFAULTS = { price: 150000, omv: '', downPct: 40, years: 7, months: 0, rate: 2.78, salary: '' };
+  var ACCENT = '#0071e3';
+
+  // running-cost inputs (fixed, labelled with units)
+  var rcWrap = $('rc');
+  RUNNING.forEach(function (r) {
+    var f = document.createElement('div');
+    f.className = 'field';
+    f.innerHTML = '<label class="label" for="rc-' + r.id + '">' + r.label + ' <span class="unit">S$/' + (r.per === 'year' ? 'yr' : 'mth') + '</span></label>' +
+      '<div class="input"><span class="affix">S$</span><input id="rc-' + r.id + '" type="number" inputmode="decimal" min="0" step="any"></div>' +
+      '<div class="err" id="rc-' + r.id + '-err"></div>';
+    rcWrap.appendChild(f);
+  });
+
+  // Downpayment state: the precise % is the source of truth unless the user typed S$.
+  var downMode = 'pct'; // 'pct' | 'amt'
+  var downPct = DEFAULTS.downPct;
+
+  function parse(v) { var n = parseFloat(v); return isFinite(n) ? n : 0; }
+  function num(id) { return parse($(id).value); }
+  function fmtNum(v) { return String(SG.round2(v)); }
+  function setErr(id, msg, boxes) {
+    var e = $(id + '-err');
+    if (e) { e.textContent = msg || ''; e.classList.toggle('show', !!msg); }
+    (boxes || [id]).forEach(function (b) { var el = $(b); if (el) el.closest('.input').classList.toggle('invalid', !!msg); });
+  }
+  function negErr(id) { setErr(id, num(id) < 0 ? 'Cannot be negative.' : ''); }
+
+  function update(src) {
+    var price = Math.max(0, num('price'));
+    var omvRaw = $('omv').value.trim();
+    var omv = omvRaw === '' ? '' : Math.max(0, parse(omvRaw));
+
+    // ---- downpayment sync (never overwrite the field being typed in) ----
+    var downAmt;
+    if (downMode === 'amt') {
+      downAmt = num('downAmt');
+      downPct = SG.pctFromDown(price, downAmt);
+      if (src !== 'downPct') $('downPct').value = price > 0 ? fmtNum(downPct) : '';
+    } else {
+      if (src === 'downPct') downPct = num('downPct');
+      downAmt = SG.downFromPct(price, downPct);
+      if (src !== 'downAmt') $('downAmt').value = fmtNum(downAmt);
+    }
+
+    ['price', 'omv', 'rate', 'salary'].forEach(negErr);
+    var downMsg = downAmt < 0 || downPct < 0 ? 'Downpayment cannot be negative.' : (downAmt > price ? 'Downpayment cannot exceed the car price.' : '');
+    setErr('down', downMsg, ['downAmt', 'downPct']);
+    var down = Math.min(Math.max(0, downAmt), price);
+
+    // ---- tenure ----
+    var T = SG.tenure(num('years'), num('months'));
+    setErr('tenure', T.error, ['years', 'months']);
+    var n = T.months;
+
+    var rate = Math.max(0, num('rate'));
+    var L = SG.loan({ price: price, omv: omv, down: down, months: n, rate: rate });
+
+    $('cap-hint').textContent = L.omvAssumed
+      ? 'OMV not entered — assuming OMV > S$20,000 (40% min down). Enter OMV if ≤ S$20k.'
+      : 'MAS cap: OMV ' + (omv <= 20000 ? '≤' : '>') + ' S$20,000 → max loan ' + (100 - L.minDownPct) + '%, min ' + L.minDownPct + '% down.';
+
+    var warn = $('down-warn');
+    if (L.belowMin && price > 0 && !downMsg) {
+      warn.innerHTML = 'Below the MAS minimum of ' + L.minDownPct + '%. Required minimum downpayment: <b>' +
+        SG.money(L.minDown) + '</b> (max loan ' + SG.money(L.maxLoan) + ').';
+      warn.classList.add('show');
+    } else { warn.classList.remove('show'); warn.textContent = ''; }
+
+    // ---- running costs ----
+    var items = RUNNING.map(function (r) { negErr('rc-' + r.id); return { value: num('rc-' + r.id), per: r.per }; });
+    var running = SG.runningMonthly(items);
+    var R = SG.totals({ instalment: L.instalment, running: running, down: down, repayable: L.repayable, months: n });
+
+    var yrsTxt = Math.floor(n / 12) + 'y' + (n % 12 ? ' ' + (n % 12) + 'm' : '');
+    $('d-loan').textContent = SG.money(L.loan);
+    $('r-total').textContent = SG.money(R.totalMonthly);
+    $('float-v').textContent = SG.money(R.totalMonthly);
+    $('r-total-sub').textContent = SG.money(L.instalment) + ' instalment + ' + SG.money(running) + ' running costs';
+    $('k-instal').textContent = SG.money(L.instalment);
+    $('k-running').textContent = SG.money(running);
+    $('k-loan').textContent = SG.money(L.loan);
+    $('k-down').textContent = SG.money(down);
+    $('k-down-sub').textContent = (price > 0 ? SG.round2(down / price * 100) : 0) + '% of price';
+    $('k-interest').textContent = SG.money(L.interest);
+    $('k-repay').textContent = SG.money(L.repayable);
+    $('k-eir').textContent = '≈ ' + L.eir.toFixed(2) + '%';
+    $('k-tco').textContent = SG.money(R.tco);
+    $('k-tco-sub').textContent = 'over ' + n + ' months (' + yrsTxt + ')';
+    $('a-min').textContent = SG.money(R.minSalary);
+    $('a-min-y').textContent = SG.money(R.minSalary * 12) + ' / year';
+    $('a-rec').textContent = SG.money(R.recSalary);
+    $('a-rec-y').textContent = SG.money(R.recSalary * 12) + ' / year';
+
+    var A = SG.affordability(R.totalMonthly, num('salary'));
+    $('aff').hidden = !A; $('aff-empty').hidden = !!A;
+    if (A) {
+      var col = A.band === 'ok' ? 'var(--ok)' : A.band === 'warn' ? 'var(--amber)' : 'var(--bad)';
+      $('aff-fill').style.width = Math.min(100, A.pct) + '%';
+      $('aff-fill').style.background = col;
+      $('aff-bar').setAttribute('aria-valuenow', Math.round(A.pct));
+      $('aff-verdict').textContent = A.verdict;
+      $('aff-verdict').style.color = col;
+      $('aff-text').textContent = A.pct.toFixed(1) + '% of your monthly salary';
+    }
+
+    var parts = [{ label: 'Loan instalment', value: L.instalment, color: ACCENT }].concat(RUNNING.map(function (r, i) {
+      var v = Math.max(0, items[i].value);
+      return { label: r.label, value: r.per === 'year' ? v / 12 : v, color: r.color };
+    }));
+    drawDonut(parts, R.totalMonthly);
+  }
+
+  function drawDonut(parts, total) {
+    var r = 15.9155; // circumference = 100
+    var markup = '<circle cx="21" cy="21" r="' + r + '" fill="none" stroke="var(--soft)" stroke-width="5"></circle>';
+    var offset = 25, legend = '';
+    parts.forEach(function (p) {
+      var pct = total > 0 ? p.value / total * 100 : 0;
+      if (pct > 0) {
+        markup += '<circle cx="21" cy="21" r="' + r + '" fill="none" stroke="' + p.color + '" stroke-width="5" stroke-dasharray="' +
+          pct + ' ' + (100 - pct) + '" stroke-dashoffset="' + offset + '"></circle>';
+        offset -= pct;
+      }
+      legend += '<li><i style="background:' + p.color + '"></i><span>' + p.label + ' · ' + pct.toFixed(0) + '%</span><b>' + SG.money(p.value) + '</b></li>';
+    });
+    markup += '<text x="21" y="21.5" text-anchor="middle" font-size="4.6" font-weight="700" fill="currentColor">' +
+      SG.money(Math.round(total)).replace('.00', '') + '</text>' +
+      '<text x="21" y="26" text-anchor="middle" font-size="2.6" fill="currentColor" opacity=".6">per month</text>';
+    $('donut').innerHTML = markup;
+    $('legend').innerHTML = legend;
+  }
+
+  // ---- wiring ----
+  $('downAmt').addEventListener('input', function () { downMode = 'amt'; update('downAmt'); });
+  $('downPct').addEventListener('input', function () { downMode = 'pct'; update('downPct'); });
+  ['price', 'omv', 'years', 'months', 'rate', 'salary'].concat(RUNNING.map(function (r) { return 'rc-' + r.id; })).forEach(function (id) {
+    $(id).addEventListener('input', function () {
+      // changing the car price keeps the % and recomputes the S$
+      if (id === 'price') downMode = 'pct';
+      update(id);
+    });
+  });
+
+  function reset() {
+    $('price').value = DEFAULTS.price; $('omv').value = DEFAULTS.omv;
+    $('downPct').value = DEFAULTS.downPct; downPct = DEFAULTS.downPct; downMode = 'pct';
+    $('years').value = DEFAULTS.years; $('months').value = DEFAULTS.months;
+    $('rate').value = DEFAULTS.rate; $('salary').value = DEFAULTS.salary;
+    RUNNING.forEach(function (r) { $('rc-' + r.id).value = r.def; });
+    update();
+  }
+  $('reset').addEventListener('click', reset);
+  $('float').addEventListener('click', function () { $('hero').scrollIntoView({ behavior: 'smooth' }); });
+  if ('IntersectionObserver' in window) {
+    new IntersectionObserver(function (es) {
+      $('float').classList.toggle('show', !es[0].isIntersecting);
+    }).observe($('hero'));
+  }
+  reset();
+})();
+</script>
+</body>
+</html>
